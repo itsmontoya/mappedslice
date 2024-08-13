@@ -1,4 +1,4 @@
-package mapped
+package mappedslice
 
 import (
 	"fmt"
