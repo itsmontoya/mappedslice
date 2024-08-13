@@ -5,3 +5,101 @@
 - Memory-mapped slices for efficient file access
 - Supports large datasets with minimal memory overhead
 - Easy-to-use API for integrating with existing Go applications
+
+## Usage
+
+### New
+```go
+func ExampleNew() {
+	var err error
+	if exampleSlice, err = New[int]("myfile.bat"); err != nil {
+		// Handle error here
+		return
+	}
+}
+```
+
+### Slice.Get
+```go
+func ExampleSlice_Get() {
+	var (
+		v   int
+		err error
+	)
+
+	if v, err = exampleSlice.Get(0); err != nil {
+		// Handle error here
+		return
+	}
+
+	fmt.Println("Value", v)
+}
+```
+
+### Slice.Set
+```go
+func ExampleSlice_Set() {
+	var err error
+	if err = exampleSlice.Set(0, 1337); err != nil {
+		// Handle error here
+		return
+	}
+}
+```
+
+### Slice.Append
+```go
+func ExampleSlice_Append() {
+	var err error
+	if err = exampleSlice.Append(1337); err != nil {
+		// Handle error here
+		return
+	}
+}
+```
+
+### Slice.InsertAt
+```go
+func ExampleSlice_InsertAt() {
+	var err error
+	if err = exampleSlice.InsertAt(0, 1337); err != nil {
+		// Handle error here
+		return
+	}
+}
+```
+
+### Slice.RemoveAt
+```go
+func ExampleSlice_RemoveAt() {
+	var err error
+	if err = exampleSlice.RemoveAt(0); err != nil {
+		// Handle error here
+		return
+	}
+}
+```
+
+### Slice.ForEach
+```go
+func ExampleSlice_ForEach() {
+	exampleSlice.ForEach(func(v int) (end bool) {
+		fmt.Println("Value", v)
+		return
+	})
+}
+```
+
+### Slice.Len
+```go
+func ExampleSlice_Len() {
+	fmt.Println("Length", exampleSlice.Len())
+}
+```
+
+### Slice.Slice
+```go
+func ExampleSlice_Slice() {
+	fmt.Println("Slice copy", exampleSlice.Slice())
+}
+```
