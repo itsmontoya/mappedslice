@@ -1,10 +1,13 @@
 package mapped
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
 )
+
+var exampleSlice *Slice[int]
 
 func TestNew(t *testing.T) {
 	type args struct {
@@ -483,4 +486,73 @@ func getTestSlice(count int) (m *Slice[int], err error) {
 	}
 
 	return
+}
+
+func ExampleNew() {
+	var err error
+	if exampleSlice, err = New[int]("myfile.bat"); err != nil {
+		// Handle error here
+		return
+	}
+}
+
+func ExampleSlice_Get() {
+	var (
+		v   int
+		err error
+	)
+
+	if v, err = exampleSlice.Get(0); err != nil {
+		// Handle error here
+		return
+	}
+
+	fmt.Println("Value", v)
+}
+
+func ExampleSlice_Set() {
+	var err error
+	if err = exampleSlice.Set(0, 1337); err != nil {
+		// Handle error here
+		return
+	}
+}
+
+func ExampleSlice_Append() {
+	var err error
+	if err = exampleSlice.Append(1337); err != nil {
+		// Handle error here
+		return
+	}
+}
+
+func ExampleSlice_InsertAt() {
+	var err error
+	if err = exampleSlice.InsertAt(0, 1337); err != nil {
+		// Handle error here
+		return
+	}
+}
+
+func ExampleSlice_RemoveAt() {
+	var err error
+	if err = exampleSlice.RemoveAt(0); err != nil {
+		// Handle error here
+		return
+	}
+}
+
+func ExampleSlice_ForEach() {
+	exampleSlice.ForEach(func(v int) (end bool) {
+		fmt.Println("Value", v)
+		return
+	})
+}
+
+func ExampleSlice_Len() {
+	fmt.Println("Length", exampleSlice.Len())
+}
+
+func ExampleSlice_Slice() {
+	fmt.Println("Slice copy", exampleSlice.Slice())
 }
