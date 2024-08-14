@@ -35,3 +35,7 @@ func (c *Cursor[T]) Prev() (prev T, ok bool) {
 	ok = true
 	return
 }
+
+func (c *Cursor[T]) Close() {
+	c.s = nil
+}
