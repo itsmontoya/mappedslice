@@ -85,7 +85,6 @@ func (s *Slice[T]) InsertAt(index int, value T) (err error) {
 
 	copy(s.s[index+1:], s.s[index:])
 	s.s[index] = value
-	*s.len++
 	return
 }
 
