@@ -110,6 +110,16 @@ func (s *Slice[T]) ForEach(fn func(T) (end bool)) (ended bool) {
 	return
 }
 
+func (s *Slice[T]) Cursor(fn func(*Cursor[T]) error) (err error) {
+	var c Cursor[T]
+	c.s = s
+	ref := &c
+	err = fn(ref)
+	ref.s = nil
+	ref.index = 0
+	return
+}
+
 func (s *Slice[T]) Len() int {
 	return len(s.s)
 }
@@ -193,7 +203,7 @@ func (s *Slice[T]) boundsCheck(index int) (err error) {
 
 func (s *Slice[T]) isInBounds(index int) (ok bool) {
 	switch {
-	case index > int(*s.len):
+	case index >= int(*s.len):
 		return false
 	case index < 0:
 		return false
