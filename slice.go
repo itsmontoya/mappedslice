@@ -110,14 +110,10 @@ func (s *Slice[T]) ForEach(fn func(T) (end bool)) (ended bool) {
 	return
 }
 
-func (s *Slice[T]) Cursor(fn func(*Cursor[T]) error) (err error) {
+func (s *Slice[T]) Cursor() (out *Cursor[T]) {
 	var c Cursor[T]
 	c.s = s
-	ref := &c
-	err = fn(ref)
-	ref.s = nil
-	ref.index = 0
-	return
+	return &c
 }
 
 func (s *Slice[T]) Len() int {
