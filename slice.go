@@ -110,8 +110,8 @@ func (s *Slice[T]) ForEach(fn func(T) (end bool)) (ended bool) {
 	return
 }
 
-func (s *Slice[T]) Cursor() (out *Cursor[T]) {
-	var c Cursor[T]
+func (s *Slice[T]) Cursor() (out Cursor[T]) {
+	var c cursor[T]
 	c.s = s
 	return &c
 }

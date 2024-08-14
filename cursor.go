@@ -1,11 +1,20 @@
 package mappedslice
 
-type Cursor[T any] struct {
+var _ Cursor[int] = &cursor[int]{}
+
+type Cursor[T any] interface {
+	Seek(index int) (T, bool)
+	Next() (T, bool)
+	Prev() (T, bool)
+	Close() error
+}
+
+type cursor[T any] struct {
 	index int
 	s     *Slice[T]
 }
 
-func (c *Cursor[T]) Seek(index int) (t T, ok bool) {
+func (c *cursor[T]) Seek(index int) (t T, ok bool) {
 	c.index = index
 	if !c.s.isInBounds(c.index) {
 		return
@@ -14,7 +23,7 @@ func (c *Cursor[T]) Seek(index int) (t T, ok bool) {
 	return c.s.s[c.index], true
 }
 
-func (c *Cursor[T]) Next() (next T, ok bool) {
+func (c *cursor[T]) Next() (next T, ok bool) {
 	c.index++
 	if !c.s.isInBounds(c.index) {
 		return
@@ -25,7 +34,7 @@ func (c *Cursor[T]) Next() (next T, ok bool) {
 	return
 }
 
-func (c *Cursor[T]) Prev() (prev T, ok bool) {
+func (c *cursor[T]) Prev() (prev T, ok bool) {
 	c.index--
 	if !c.s.isInBounds(c.index) {
 		return
@@ -36,6 +45,7 @@ func (c *Cursor[T]) Prev() (prev T, ok bool) {
 	return
 }
 
-func (c *Cursor[T]) Close() {
+func (c *cursor[T]) Close() error {
 	c.s = nil
+	return nil
 }
