@@ -90,6 +90,56 @@ func ExampleSlice_ForEach() {
 }
 ```
 
+### Slice.Cursor
+```go
+func ExampleSlice_Cursor() {
+	err := exampleSlice.Cursor(func(c *Cursor[int]) (err error) {
+		v, ok := c.Seek(1337)
+		if !ok {
+			return fmt.Errorf("index is missing")
+		}
+
+		fmt.Println("My seek value!", v)
+
+		for ok {
+			v, ok = c.Next()
+			fmt.Println("My next value!", v)
+		}
+
+		return
+	})
+
+	if err != nil {
+		// Handle error here
+	}
+}
+```
+
+### Slice.Cursor (using previous)
+```go
+func ExampleSlice_Cursor_prev() {
+	err := exampleSlice.Cursor(func(c *Cursor[int]) (err error) {
+		v, ok := c.Seek(1337)
+		if !ok {
+			return fmt.Errorf("index is missing")
+		}
+
+		fmt.Println("My seek value!", v)
+
+		for ok {
+			v, ok = c.Prev()
+			fmt.Println("My previous value!", v)
+		}
+
+		return
+	})
+
+	if err != nil {
+		// Handle error here
+	}
+}
+```
+
 ### Slice.Len
 ```go
 func ExampleSlice_Len() {
