@@ -2,7 +2,6 @@ package mappedslice
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"reflect"
 	"testing"
@@ -455,7 +454,8 @@ func TestSlice_Cursor(t *testing.T) {
 		numberOfEntries int
 		args            args
 
-		want []int
+		want         []int
+		wantNonExist bool
 	}{
 		{
 			name:            "basic",
@@ -491,7 +491,8 @@ func TestSlice_Cursor(t *testing.T) {
 				seek: 3,
 				err:  nil,
 			},
-			want: nil,
+			want:         nil,
+			wantNonExist: true,
 		},
 	}
 
@@ -507,19 +508,21 @@ func TestSlice_Cursor(t *testing.T) {
 			var got []int
 			cur := m.Cursor()
 			v, ok := cur.Seek(tt.args.seek)
-			if !ok {
-				t.Errorf("Slice.Cursor(): error seeking: %v", err)
+			if !ok && !tt.wantNonExist {
+				t.Errorf("Slice.Cursor(): error seeking: %v", tt.args.seek)
 				return
 			}
 
-			got = append(got, v)
-			for {
-				v, ok := cur.Next()
-				if !ok {
-					break
-				}
-
+			if ok {
 				got = append(got, v)
+				for {
+					v, ok := cur.Next()
+					if !ok {
+						break
+					}
+
+					got = append(got, v)
+				}
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {
@@ -540,8 +543,8 @@ func TestSlice_Cursor_Prev(t *testing.T) {
 		numberOfEntries int
 		args            args
 
-		want    []int
-		wantErr bool
+		want         []int
+		wantNonExist bool
 	}{
 		{
 			name:            "basic",
@@ -550,8 +553,8 @@ func TestSlice_Cursor_Prev(t *testing.T) {
 				seek: 0,
 				err:  nil,
 			},
-			want:    []int{0},
-			wantErr: false,
+			want:         []int{0},
+			wantNonExist: false,
 		},
 		{
 			name:            "with seek",
@@ -560,8 +563,8 @@ func TestSlice_Cursor_Prev(t *testing.T) {
 				seek: 1,
 				err:  nil,
 			},
-			want:    []int{1, 0},
-			wantErr: false,
+			want:         []int{1, 0},
+			wantNonExist: false,
 		},
 		{
 			name:            "with end seek",
@@ -570,8 +573,8 @@ func TestSlice_Cursor_Prev(t *testing.T) {
 				seek: 2,
 				err:  nil,
 			},
-			want:    []int{2, 1, 0},
-			wantErr: false,
+			want:         []int{2, 1, 0},
+			wantNonExist: false,
 		},
 		{
 			name:            "with out of bounds seek",
@@ -580,18 +583,8 @@ func TestSlice_Cursor_Prev(t *testing.T) {
 				seek: 3,
 				err:  nil,
 			},
-			want:    nil,
-			wantErr: false,
-		},
-		{
-			name:            "with error",
-			numberOfEntries: 3,
-			args: args{
-				seek: 0,
-				err:  io.EOF,
-			},
-			want:    []int{0},
-			wantErr: true,
+			want:         nil,
+			wantNonExist: true,
 		},
 	}
 
@@ -607,19 +600,21 @@ func TestSlice_Cursor_Prev(t *testing.T) {
 			var got []int
 			cur := m.Cursor()
 			v, ok := cur.Seek(tt.args.seek)
-			if !ok {
-				t.Errorf("Slice.Cursor(): error seeking: %v", err)
+			if !ok && !tt.wantNonExist {
+				t.Errorf("Slice.Cursor(): error seeking: %v", tt.args.seek)
 				return
 			}
 
-			got = append(got, v)
-			for {
-				v, ok := cur.Prev()
-				if !ok {
-					break
-				}
-
+			if ok {
 				got = append(got, v)
+				for {
+					v, ok := cur.Prev()
+					if !ok {
+						break
+					}
+
+					got = append(got, v)
+				}
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {
