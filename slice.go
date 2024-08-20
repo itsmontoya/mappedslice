@@ -10,7 +10,7 @@ import (
 
 const mappedCeiling = 1<<37 - 1
 
-func New[T any](filepath string) (ref *Slice[T], err error) {
+func New[T any](filepath string, initialCapacity int64) (ref *Slice[T], err error) {
 	var d Slice[T]
 	if d.f, err = os.OpenFile(filepath, os.O_CREATE|os.O_RDWR, 0644); err != nil {
 		return
@@ -25,7 +25,7 @@ func New[T any](filepath string) (ref *Slice[T], err error) {
 	}
 
 	if info.Size() == 0 {
-		if err = d.growTo(32); err != nil {
+		if err = d.growTo(initialCapacity); err != nil {
 			return
 		}
 	} else {

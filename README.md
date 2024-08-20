@@ -12,7 +12,7 @@
 ```go
 func ExampleNew() {
 	var err error
-	if exampleSlice, err = New[int]("myfile.bat"); err != nil {
+	if exampleSlice, err = New[int]("myfile.bat", 32); err != nil {
 		// Handle error here
 		return
 	}
