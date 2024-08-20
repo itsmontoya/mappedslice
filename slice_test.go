@@ -36,7 +36,7 @@ func TestNew(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ref, err := New[int](tt.args.filepath)
+			ref, err := New[int](tt.args.filepath, 32)
 			if err == nil {
 				defer os.Remove(tt.args.filepath)
 				defer ref.Close()
@@ -656,7 +656,7 @@ func TestSlice_Len(t *testing.T) {
 }
 
 func getTestSlice(count int) (m *Slice[int], err error) {
-	if m, err = New[int]("test.bat"); err != nil {
+	if m, err = New[int]("test.bat", 32); err != nil {
 		return
 	}
 
@@ -671,7 +671,7 @@ func getTestSlice(count int) (m *Slice[int], err error) {
 
 func ExampleNew() {
 	var err error
-	if exampleSlice, err = New[int]("myfile.bat"); err != nil {
+	if exampleSlice, err = New[int]("myfile.bat", 32); err != nil {
 		// Handle error here
 		return
 	}
