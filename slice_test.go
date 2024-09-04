@@ -60,8 +60,8 @@ func TestSlice_Get(t *testing.T) {
 		numberOfEntries int
 		args            args
 
-		want    int
-		wantErr bool
+		want   int
+		wantOk bool
 	}{
 		{
 			name:            "basic",
@@ -69,8 +69,8 @@ func TestSlice_Get(t *testing.T) {
 			args: args{
 				index: 2,
 			},
-			want:    2,
-			wantErr: false,
+			want:   2,
+			wantOk: true,
 		},
 		{
 			name:            "large set",
@@ -78,8 +78,8 @@ func TestSlice_Get(t *testing.T) {
 			args: args{
 				index: 127,
 			},
-			want:    127,
-			wantErr: false,
+			want:   127,
+			wantOk: true,
 		},
 		{
 			name:            "negative index",
@@ -87,8 +87,8 @@ func TestSlice_Get(t *testing.T) {
 			args: args{
 				index: -1,
 			},
-			want:    0,
-			wantErr: true,
+			want:   0,
+			wantOk: false,
 		},
 		{
 			name:            "out of bounds index",
@@ -96,8 +96,8 @@ func TestSlice_Get(t *testing.T) {
 			args: args{
 				index: 5,
 			},
-			want:    0,
-			wantErr: true,
+			want:   0,
+			wantOk: false,
 		},
 	}
 
@@ -110,10 +110,9 @@ func TestSlice_Get(t *testing.T) {
 			}
 			defer os.Remove(m.f.Name())
 
-			got, err := m.Get(tt.args.index)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Slice.Get() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			got, gotOk := m.Get(tt.args.index)
+			if gotOk != tt.wantOk {
+				t.Errorf("Slice.Get() gotOk = %v, wantOk %v", gotOk, tt.wantOk)
 			}
 
 			if got != tt.want {
@@ -679,12 +678,12 @@ func ExampleNew() {
 
 func ExampleSlice_Get() {
 	var (
-		v   int
-		err error
+		v  int
+		ok bool
 	)
 
-	if v, err = exampleSlice.Get(0); err != nil {
-		// Handle error here
+	if v, ok = exampleSlice.Get(0); !ok {
+		// Missing entry here
 		return
 	}
 

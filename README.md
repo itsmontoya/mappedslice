@@ -24,11 +24,11 @@ func ExampleNew() {
 func ExampleSlice_Get() {
 	var (
 		v   int
-		err error
+		ok bool
 	)
 
-	if v, err = exampleSlice.Get(0); err != nil {
-		// Handle error here
+	if v, ok = exampleSlice.Get(0); !ok {
+		// Missing entry here
 		return
 	}
 
