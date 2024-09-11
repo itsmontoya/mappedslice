@@ -7,7 +7,11 @@ import (
 	"testing"
 )
 
-var exampleSlice *Slice[int]
+var (
+	exampleSlice *Slice[int]
+
+	intSink int
+)
 
 func TestNew(t *testing.T) {
 	type args struct {
@@ -651,6 +655,54 @@ func TestSlice_Len(t *testing.T) {
 				t.Errorf("Slice.Len() got = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func BenchmarkSlice_Append(b *testing.B) {
+	s, err := New[int]("./benchmarking.bat", int64(b.N))
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer os.Remove("./benchmarking.bat")
+	for i := 0; i < b.N; i++ {
+		if err := s.Append(i); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkSlice_InsertAt(b *testing.B) {
+	s, err := New[int]("./benchmarking.bat", int64(b.N))
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer os.Remove("./benchmarking.bat")
+	for i := 0; i < b.N; i++ {
+		if i == 0 {
+			if err := s.Append(i); err != nil {
+				b.Fatal(err)
+			}
+		}
+
+		if err := s.InsertAt(0, i); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkSlice_Get(b *testing.B) {
+	s, err := getTestSlice(b.N)
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer os.Remove("./test.bat")
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		var ok bool
+		if intSink, ok = s.Get(i); !ok {
+			b.Fatalf("index of <%d> not found", intSink)
+		}
 	}
 }
 
