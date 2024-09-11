@@ -16,33 +16,17 @@ type cursor[T any] struct {
 
 func (c *cursor[T]) Seek(index int) (t T, ok bool) {
 	c.index = index
-	if !c.s.isInBounds(c.index) {
-		return
-	}
-
-	return c.s.s[c.index], true
+	return c.s.Get(c.index)
 }
 
 func (c *cursor[T]) Next() (next T, ok bool) {
 	c.index++
-	if !c.s.isInBounds(c.index) {
-		return
-	}
-
-	next = c.s.s[c.index]
-	ok = true
-	return
+	return c.s.Get(c.index)
 }
 
 func (c *cursor[T]) Prev() (prev T, ok bool) {
 	c.index--
-	if !c.s.isInBounds(c.index) {
-		return
-	}
-
-	prev = c.s.s[c.index]
-	ok = true
-	return
+	return c.s.Get(c.index)
 }
 
 func (c *cursor[T]) Close() error {

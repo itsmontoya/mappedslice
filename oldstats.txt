@@ -1,0 +1,8 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/itsmontoya/mappedslice
+cpu: Apple M3
+BenchmarkSlice_Append-8         371883729                6.353 ns/op
+BenchmarkSlice_InsertAt-8        1000000             66850 ns/op
+BenchmarkSlice_Get-8            1000000000               3.933 ns/op
+PASS

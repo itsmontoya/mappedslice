@@ -8,7 +8,12 @@ import (
 	"github.com/edsrzf/mmap-go"
 )
 
-const mappedCeiling = 1<<37 - 1
+var (
+	intSize    = int64(unsafe.Sizeof(int64(0)))
+	lenOffset  = 0
+	capOffset  = intSize
+	dataOffset = intSize * 2
+)
 
 func New[T any](filepath string, initialCapacity int64) (ref *Slice[T], err error) {
 	var d Slice[T]
@@ -38,7 +43,6 @@ func New[T any](filepath string, initialCapacity int64) (ref *Slice[T], err erro
 type Slice[T any] struct {
 	f  *os.File
 	mm mmap.MMap
-	s  []T
 
 	sizeOf int64
 
@@ -46,12 +50,12 @@ type Slice[T any] struct {
 	cap *int64
 }
 
-func (s *Slice[T]) Get(index int) (kv T, ok bool) {
+func (s *Slice[T]) Get(index int) (v T, ok bool) {
 	if !s.isInBounds(index) {
 		return
 	}
 
-	kv = s.s[index]
+	v = *s.get(index)
 	ok = true
 	return
 }
@@ -61,7 +65,8 @@ func (s *Slice[T]) Set(index int, t T) (err error) {
 		return
 	}
 
-	s.s[index] = t
+	v := s.get(index)
+	*v = t
 	return
 }
 
@@ -70,8 +75,10 @@ func (s *Slice[T]) Append(t T) (err error) {
 		return
 	}
 
-	s.s = append(s.s, t)
+	index := int(*s.len)
 	*s.len++
+	v := s.get(index)
+	*v = t
 	return
 }
 
@@ -84,8 +91,20 @@ func (s *Slice[T]) InsertAt(index int, value T) (err error) {
 		return
 	}
 
-	copy(s.s[index+1:], s.s[index:])
-	s.s[index] = value
+	s.mm = append(s.mm[:])
+
+	for i := int(*s.len - 1); i >= index; i-- {
+		var source *T
+		if i > index {
+			source = s.get(i - 1)
+		} else {
+			source = &value
+		}
+
+		target := s.get(i)
+		*target = *source
+	}
+
 	return
 }
 
@@ -94,16 +113,21 @@ func (s *Slice[T]) RemoveAt(index int) (err error) {
 		return
 	}
 
-	first := s.s[:index]
-	second := s.s[index+1:]
-	s.s = append(first, second...)
+	end := int(*s.len) - 1
+	for i := index; i < end; i++ {
+		source := s.get(i + 1)
+		target := s.get(i)
+		*target = *source
+	}
+
 	*s.len--
 	return
 }
 
 func (s *Slice[T]) ForEach(fn func(T) (end bool)) (ended bool) {
-	for _, t := range s.s {
-		if ended = fn(t); ended {
+	for i := 0; i < int(*s.len); i++ {
+		t := s.get(i)
+		if ended = fn(*t); ended {
 			return
 		}
 	}
@@ -118,12 +142,16 @@ func (s *Slice[T]) Cursor() (out Cursor[T]) {
 }
 
 func (s *Slice[T]) Len() int {
-	return len(s.s)
+	return int(*s.len)
 }
 
 func (s *Slice[T]) Slice() (out []T) {
-	out = make([]T, len(s.s))
-	copy(out, s.s)
+	out = make([]T, 0, *s.len)
+	s.ForEach(func(t T) (end bool) {
+		out = append(out, t)
+		return false
+	})
+
 	return
 }
 
@@ -133,6 +161,18 @@ func (s *Slice[T]) Close() (err error) {
 	}
 
 	return s.f.Close()
+}
+
+func (s *Slice[T]) get(index int) (t *T) {
+	bs := s.getBytes(index)
+	t = (*T)(unsafe.Pointer(&bs[0]))
+	return
+}
+
+func (s *Slice[T]) getBytes(index int) (bs []byte) {
+	byteIndex := dataOffset + (int64(index) * s.sizeOf)
+	bs = s.mm[byteIndex : byteIndex+s.sizeOf]
+	return
 }
 
 func (s *Slice[T]) unmap() (err error) {
@@ -153,9 +193,8 @@ func (s *Slice[T]) associate() (err error) {
 		return
 	}
 
-	s.len = (*int64)(unsafe.Pointer(&s.mm[0]))
-	s.cap = (*int64)(unsafe.Pointer(&s.mm[8]))
-	s.s = (*(*[mappedCeiling]T)(unsafe.Pointer(&s.mm[16])))[:*s.len]
+	s.len = (*int64)(unsafe.Pointer(&s.mm[lenOffset]))
+	s.cap = (*int64)(unsafe.Pointer(&s.mm[capOffset]))
 	return
 }
 

@@ -669,6 +669,8 @@ func BenchmarkSlice_Append(b *testing.B) {
 			b.Fatal(err)
 		}
 	}
+
+	b.ReportAllocs()
 }
 
 func BenchmarkSlice_InsertAt(b *testing.B) {
@@ -688,6 +690,8 @@ func BenchmarkSlice_InsertAt(b *testing.B) {
 			b.Fatal(err)
 		}
 	}
+
+	b.ReportAllocs()
 }
 
 func BenchmarkSlice_Get(b *testing.B) {
@@ -704,6 +708,8 @@ func BenchmarkSlice_Get(b *testing.B) {
 			b.Fatalf("index of <%d> not found", intSink)
 		}
 	}
+
+	b.ReportAllocs()
 }
 
 func getTestSlice(count int) (m *Slice[int], err error) {
