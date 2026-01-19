@@ -45,13 +45,12 @@ type Slice[T any] struct {
 	cap *int64
 }
 
-func (s *Slice[T]) Get(index int) (kv T, ok bool) {
-	if !s.isInBounds(index) {
+func (s *Slice[T]) Get(index int) (kv T, err error) {
+	if err = s.boundsCheck(index); err != nil {
 		return
 	}
 
 	kv = s.s[index]
-	ok = true
 	return
 }
 
