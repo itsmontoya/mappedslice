@@ -64,8 +64,8 @@ func TestSlice_Get(t *testing.T) {
 		numberOfEntries int
 		args            args
 
-		want   int
-		wantOk bool
+		want    int
+		wantErr bool
 	}{
 		{
 			name:            "basic",
@@ -73,8 +73,8 @@ func TestSlice_Get(t *testing.T) {
 			args: args{
 				index: 2,
 			},
-			want:   2,
-			wantOk: true,
+			want:    2,
+			wantErr: false,
 		},
 		{
 			name:            "large set",
@@ -82,8 +82,8 @@ func TestSlice_Get(t *testing.T) {
 			args: args{
 				index: 127,
 			},
-			want:   127,
-			wantOk: true,
+			want:    127,
+			wantErr: false,
 		},
 		{
 			name:            "negative index",
@@ -91,8 +91,8 @@ func TestSlice_Get(t *testing.T) {
 			args: args{
 				index: -1,
 			},
-			want:   0,
-			wantOk: false,
+			want:    0,
+			wantErr: true,
 		},
 		{
 			name:            "out of bounds index",
@@ -100,8 +100,8 @@ func TestSlice_Get(t *testing.T) {
 			args: args{
 				index: 5,
 			},
-			want:   0,
-			wantOk: false,
+			want:    0,
+			wantErr: true,
 		},
 	}
 
@@ -114,9 +114,9 @@ func TestSlice_Get(t *testing.T) {
 			}
 			defer os.Remove(m.f.Name())
 
-			got, gotOk := m.Get(tt.args.index)
-			if gotOk != tt.wantOk {
-				t.Errorf("Slice.Get() gotOk = %v, wantOk %v", gotOk, tt.wantOk)
+			got, err := m.Get(tt.args.index)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Slice.Get() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			if got != tt.want {
@@ -449,7 +449,6 @@ func TestSlice_ForEach(t *testing.T) {
 func TestSlice_Cursor(t *testing.T) {
 	type args struct {
 		seek int
-		err  error
 	}
 
 	tests := []struct {
@@ -457,15 +456,14 @@ func TestSlice_Cursor(t *testing.T) {
 		numberOfEntries int
 		args            args
 
-		want         []int
-		wantNonExist bool
+		want    []int
+		wantErr bool
 	}{
 		{
 			name:            "basic",
 			numberOfEntries: 3,
 			args: args{
 				seek: 0,
-				err:  nil,
 			},
 			want: []int{0, 1, 2},
 		},
@@ -474,7 +472,6 @@ func TestSlice_Cursor(t *testing.T) {
 			numberOfEntries: 3,
 			args: args{
 				seek: 1,
-				err:  nil,
 			},
 			want: []int{1, 2},
 		},
@@ -483,7 +480,6 @@ func TestSlice_Cursor(t *testing.T) {
 			numberOfEntries: 3,
 			args: args{
 				seek: 2,
-				err:  nil,
 			},
 			want: []int{2},
 		},
@@ -492,10 +488,9 @@ func TestSlice_Cursor(t *testing.T) {
 			numberOfEntries: 3,
 			args: args{
 				seek: 3,
-				err:  nil,
 			},
-			want:         nil,
-			wantNonExist: true,
+			want:    nil,
+			wantErr: true,
 		},
 	}
 
@@ -510,17 +505,17 @@ func TestSlice_Cursor(t *testing.T) {
 
 			var got []int
 			cur := m.Cursor()
-			v, ok := cur.Seek(tt.args.seek)
-			if !ok && !tt.wantNonExist {
+			v, err := cur.Seek(tt.args.seek)
+			if (err != nil) != tt.wantErr {
 				t.Errorf("Slice.Cursor(): error seeking: %v", tt.args.seek)
 				return
 			}
 
-			if ok {
+			if err == nil {
 				got = append(got, v)
 				for {
-					v, ok := cur.Next()
-					if !ok {
+					v, err := cur.Next()
+					if err != nil {
 						break
 					}
 
@@ -538,7 +533,6 @@ func TestSlice_Cursor(t *testing.T) {
 func TestSlice_Cursor_Prev(t *testing.T) {
 	type args struct {
 		seek int
-		err  error
 	}
 
 	tests := []struct {
@@ -546,48 +540,41 @@ func TestSlice_Cursor_Prev(t *testing.T) {
 		numberOfEntries int
 		args            args
 
-		want         []int
-		wantNonExist bool
+		want    []int
+		wantErr bool
 	}{
 		{
 			name:            "basic",
 			numberOfEntries: 3,
 			args: args{
 				seek: 0,
-				err:  nil,
 			},
-			want:         []int{0},
-			wantNonExist: false,
+			want: []int{0},
 		},
 		{
 			name:            "with seek",
 			numberOfEntries: 3,
 			args: args{
 				seek: 1,
-				err:  nil,
 			},
-			want:         []int{1, 0},
-			wantNonExist: false,
+			want: []int{1, 0},
 		},
 		{
 			name:            "with end seek",
 			numberOfEntries: 3,
 			args: args{
 				seek: 2,
-				err:  nil,
 			},
-			want:         []int{2, 1, 0},
-			wantNonExist: false,
+			want: []int{2, 1, 0},
 		},
 		{
 			name:            "with out of bounds seek",
 			numberOfEntries: 3,
 			args: args{
 				seek: 3,
-				err:  nil,
 			},
-			want:         nil,
-			wantNonExist: true,
+			want:    nil,
+			wantErr: true,
 		},
 	}
 
@@ -602,17 +589,17 @@ func TestSlice_Cursor_Prev(t *testing.T) {
 
 			var got []int
 			cur := m.Cursor()
-			v, ok := cur.Seek(tt.args.seek)
-			if !ok && !tt.wantNonExist {
+			v, err := cur.Seek(tt.args.seek)
+			if (err != nil) != tt.wantErr {
 				t.Errorf("Slice.Cursor(): error seeking: %v", tt.args.seek)
 				return
 			}
 
-			if ok {
+			if err == nil {
 				got = append(got, v)
 				for {
-					v, ok := cur.Prev()
-					if !ok {
+					v, err := cur.Prev()
+					if err != nil {
 						break
 					}
 
@@ -699,8 +686,8 @@ func BenchmarkSlice_Get(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		var ok bool
-		if intSink, ok = s.Get(i); !ok {
+		var err error
+		if intSink, err = s.Get(i); err != nil {
 			b.Fatalf("index of <%d> not found", intSink)
 		}
 	}
@@ -730,11 +717,11 @@ func ExampleNew() {
 
 func ExampleSlice_Get() {
 	var (
-		v  int
-		ok bool
+		v   int
+		err error
 	)
 
-	if v, ok = exampleSlice.Get(0); !ok {
+	if v, err = exampleSlice.Get(0); err != nil {
 		// Missing entry here
 		return
 	}
@@ -783,32 +770,32 @@ func ExampleSlice_ForEach() {
 
 func ExampleSlice_Cursor() {
 	cur := exampleSlice.Cursor()
-	v, ok := cur.Seek(1337)
-	if !ok {
+	v, err := cur.Seek(1337)
+	if err != nil {
 		fmt.Println("index is missing")
 		return
 	}
 
 	fmt.Println("My seek value!", v)
 
-	for ok {
-		v, ok = cur.Next()
+	for err == nil {
+		v, err = cur.Next()
 		fmt.Println("My next value!", v)
 	}
 }
 
 func ExampleSlice_Cursor_prev() {
 	cur := exampleSlice.Cursor()
-	v, ok := cur.Seek(1337)
-	if !ok {
+	v, err := cur.Seek(1337)
+	if err != nil {
 		fmt.Println("index is missing")
 		return
 	}
 
 	fmt.Println("My seek value!", v)
 
-	for ok {
-		v, ok = cur.Prev()
+	for err == nil {
+		v, err = cur.Prev()
 		fmt.Println("My previous value!", v)
 	}
 }
